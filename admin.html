@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PANEL</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; text-align: center; padding: 10px; margin: 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .card { background: #252525; padding: 10px; border-radius: 8px; border-top: 5px solid #444; }
+        .row { display: flex; align-items: center; gap: 5px; margin: 6px 0; }
+        button { padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-go { flex-grow: 1; background: #3498db; color: white; font-size: 16px; }
+        .btn-go:hover { background: #2980b9; }
+        .btn-check { background: #e74c3c; color: white; width: 90px; font-size: 14px; }
+        .btn-uncheck { background: #2ecc71; color: white; width: 90px; font-size: 14px; }
+        .status-bar { background: #1e1e1e; padding: 15px; position: sticky; top: 0; border-bottom: 2px solid #00ff00; margin-bottom: 20px; font-size: 18px; z-index: 100; }
+        h3 { margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="status-bar">Status wysyłania: <span id="st" style="color: #00ff00;">Gotowy</span></div>
+    
+    <div class="grid" id="admin-grid"></div>
+    
+    <button onclick="trigger('index.html')" style="background: #f1c40f; color: black; padding: 20px; margin-top: 30px; width: 100%; font-size: 20px;">
+        🏠 WRÓĆ WSZYSTKICH NA STRONĘ GŁÓWNĄ (TABLICĘ)
+    </button>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNkg8Umo5NbaEuC-Ly4EGkHuQ2yU4QVeVcmUTs2pGrKD27vqYf08sWDbthAjXZbXg/exec";
+
+        const categories = [
+            {n: "ANIME", id: "Anime", c: "#9b59b6"}, {n: "GRY", id: "Gry", c: "#3498db"},
+            {n: "HISTORIA", id: "Historia", c: "#f1c40f"}, {n: "MUZYKA", id: "Muzyka", c: "#1db954"},
+            {n: "PRAWO JAZDY", id: "Prawojazdy", c: "#e67e22"}, {n: "RYMOWANKI", id: "Rymowanki", c: "#ecf0f1"}
+        ];
+
+        const grid = document.getElementById('admin-grid');
+        categories.forEach(cat => {
+            let html = `<div class="card" style="border-color: ${cat.c}"><h3>${cat.n}</h3>`;
+            for(let i=1; i<=4; i++) {
+                const qId = `${cat.id}${i}`;
+                html += `<div class="row">
+                    <button class="btn-go" onclick="trigger('${qId}.html')">WŁĄCZ: ${cat.n} ${i}</button>
+                    <button class="btn-check" onclick="sendCheck('${qId}', true)" title="Zablokuj pytanie na tablicy">✖ Zablokuj</button>
+                    <button class="btn-uncheck" onclick="sendCheck('${qId}', false)" title="Odblokuj pytanie">✔ Odblokuj</button>
+                </div>`;
+            }
+            html += `</div>`;
+            grid.innerHTML += html;
+        });
+
+        async function trigger(page) {
+            const statusBox = document.getElementById('st');
+            statusBox.innerText = "Wysyłam stronę " + page + "...";
+            statusBox.style.color = "#f39c12";
+            
+            try {
+                await fetch(GOOGLE_SCRIPT_URL + "?page=" + page, { mode: 'no-cors' });
+                statusBox.innerText = "Pomyślnie wysłano: " + page;
+                statusBox.style.color = "#00ff00";
+            } catch(e) {
+                statusBox.innerText = "BŁĄD WYSYŁANIA!";
+                statusBox.style.color = "#ff0000";
+            }
+        }
+
+        async function sendCheck(id, status) {
+            const statusBox = document.getElementById('st');
+            statusBox.innerText = status ? "Blokowanie " + id + "..." : "Odblokowywanie " + id + "...";
+            statusBox.style.color = "#f39c12";
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL + "?id=" + id + "&status=" + status, { mode: 'no-cors' });
+                statusBox.innerText = status ? "Zablokowano: " + id : "Odblokowano: " + id;
+                statusBox.style.color = "#00ff00";
+            } catch(e) {
+                statusBox.innerText = "BŁĄD WYSYŁANIA!";
+                statusBox.style.color = "#ff0000";
+            }
+        }
+    </script>
+</body>
+</html>
